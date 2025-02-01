@@ -543,6 +543,73 @@ body {
     cursor: pointer;
     transition: transform 0.3s ease;
 }
+
+.special-message {
+    max-width: 85%;
+    margin: 1.5rem auto;
+    padding: 1.5rem;
+    transform: scale(0.95);
+}
+
+.alegria-details {
+    padding: 1rem;
+    margin: 0.5rem 0;
+}
+
+.event-title {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    margin-bottom: 0.8rem;
+}
+
+.event-description {
+    font-size: clamp(1rem, 2.5vw, 1.1rem);
+    margin-bottom: 1.2rem;
+}
+
+.event-info {
+    gap: 0.6rem;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
+}
+
+.rsvp-section {
+    margin-top: 1.2rem;
+}
+
+.rsvp-text {
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+    margin-bottom: 1.2rem;
+}
+
+.rsvp-buttons {
+    gap: 0.8rem;
+}
+
+.rsvp-btn {
+    padding: 0.8rem 1.5rem;
+    min-width: 200px;
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+}
+
+/* Mobile optimization */
+@media (max-width: 480px) {
+    .special-message {
+        max-width: 95%;
+        padding: 1rem;
+        margin: 1rem auto;
+    }
+    
+    .rsvp-btn {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .special-message {
+        max-width: 75%;
+    }
+}
 </style>
 
 <script>
@@ -667,7 +734,6 @@ document.querySelectorAll('.crystal-option').forEach(btn => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Add modal HTML to the page
     const modalHTML = `
     <div id="rsvp-modal" class="modal">
         <div class="modal-content">
@@ -690,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'block';
     });
 
-    // Handle form submission
+    // Updated submit handler
     submitBtn?.addEventListener('click', async () => {
         const name = document.getElementById('guest-name').value;
         const contact = document.getElementById('guest-contact').value;
@@ -700,33 +766,34 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+        
         try {
-            const response = await fetch('/api/send-email', {
+            const response = await fetch('/api/rsvp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    name, 
-                    contact,
-                    choice: 'Will Attend'
-                })
+                body: JSON.stringify({ name, contact })
             });
+
+            const responseData = await response.json();
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to send RSVP');
+            if (!response.ok || !responseData.success) {
+                throw new Error(responseData.message || 'Failed to send RSVP');
             }
 
             // Hide modal
             modal.style.display = 'none';
             
-            // Show success animation and message
+            // Show success animation
             const sparkles = document.createElement('div');
             sparkles.className = 'confetti';
             document.body.appendChild(sparkles);
             
-            // Show success message
+            // Show success message with animation
             gsap.to('#sweet-message', {
                 duration: 1,
                 opacity: 1,
@@ -736,11 +803,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             alert('Thank you for your RSVP! We can\'t wait to see you at Alegría! 🎭✨');
             
-            // Clean up
+            // Clean up animation
             setTimeout(() => sparkles.remove(), 2000);
+            
         } catch (error) {
             console.error('Error:', error);
             alert('Oops! Something went wrong. Please try again! 🌟');
+        } finally {
+            // Reset button state
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Confirm RSVP ✨';
         }
     });
 
